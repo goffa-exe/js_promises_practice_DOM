@@ -1,76 +1,90 @@
 'use strict';
 
 const firstPromise = new Promise((resolve, reject) => {
-  document.addEventListener('mousedown', (e) => {
-    if (e.button === 0) {
-      resolve();
-    }
-  });
+  let done = false;
 
-  setTimeout(() => {
-    // eslint-disable-next-line prefer-promise-reject-errors
-    reject();
+  const handler = (e) => {
+    if (e.button === 0 && !done) {
+      done = true;
+      resolve('First promise was resolved');
+      clearTimeout(timerId);
+      document.removeEventListener('mousedown', handler);
+    }
+  };
+
+  document.addEventListener('mousedown', handler);
+
+  const timerId = setTimeout(() => {
+    if (!done) {
+      done = true;
+      // eslint-disable-next-line prefer-promise-reject-errors
+      reject('First promise was rejected');
+      document.removeEventListener('mousedown', handler);
+    }
   }, 3000);
 });
 
-const secondPromise = new Promise((resolve, reject) => {
-  document.addEventListener('mousedown', () => {
-    resolve();
-  });
+const secondPromise = new Promise((resolve) => {
+  const handler = (e) => {
+    if (e.button === 0 || e.button === 2) {
+      resolve('Second promise was resolved');
+      document.removeEventListener('mousedown', handler);
+    }
+  };
+
+  document.addEventListener('mousedown', handler);
 });
 
 const thirdPromise = new Promise((resolve) => {
   let leftClicked = false;
   let rightClicked = false;
 
-  document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  document.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-
+  const handler = (e) => {
     if (e.button === 0) {
       leftClicked = true;
     }
 
     if (e.button === 2) {
       rightClicked = true;
+      e.preventDefault();
     }
 
     if (leftClicked && rightClicked) {
-      resolve();
+      resolve('Third promise was resolved');
+      document.removeEventListener('mousedown', handler);
     }
-  });
+  };
+
+  document.addEventListener('mousedown', handler);
 });
 
 firstPromise
-  .then(() => {
-    const resolveMessage = createMessage(
-      'success',
-      'First promise was resolved',
-    );
+  .then((message) => {
+    const resolveMessage = createMessage('success', message);
 
     document.body.append(resolveMessage);
   })
-  .catch(() => {
-    const rejectMessage = createMessage('error', 'First promise was rejected');
+  .catch((message) => {
+    const rejectMessage = createMessage('error', message);
 
     document.body.append(rejectMessage);
   });
 
-secondPromise.then(() => {
-  const resolveMessage = createMessage(
-    'success',
-    'Second promise was resolved',
-  );
+secondPromise
+  .then((message) => {
+    const resolveMessage = createMessage('success', message);
 
-  document.body.append(resolveMessage);
-});
+    document.body.append(resolveMessage);
+  })
+  .catch();
 
-thirdPromise.then(() => {
-  const resolveMessage = createMessage('success', 'Third promise was resolved');
+thirdPromise
+  .then((message) => {
+    const resolveMessage = createMessage('success', message);
 
-  document.body.append(resolveMessage);
-});
+    document.body.append(resolveMessage);
+  })
+  .catch();
 
 function createMessage(type, promiseMsg) {
   const message = document.createElement('div');
