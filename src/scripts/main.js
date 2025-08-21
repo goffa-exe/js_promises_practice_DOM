@@ -60,19 +60,19 @@ const thirdPromise = new Promise((resolve) => {
 
 firstPromise
   .then((message) => {
-    const resolveMessage = createMessage('success', message);
+    const resolveMessage = createNotification('success', message);
 
     document.body.append(resolveMessage);
   })
   .catch((message) => {
-    const rejectMessage = createMessage('error', message);
+    const rejectMessage = createNotification('error', message);
 
     document.body.append(rejectMessage);
   });
 
 secondPromise
   .then((message) => {
-    const resolveMessage = createMessage('success', message);
+    const resolveMessage = createNotification('success', message);
 
     document.body.append(resolveMessage);
   })
@@ -80,18 +80,23 @@ secondPromise
 
 thirdPromise
   .then((message) => {
-    const resolveMessage = createMessage('success', message);
+    const resolveMessage = createNotification('success', message);
 
     document.body.append(resolveMessage);
   })
   .catch();
 
-function createMessage(type, promiseMsg) {
-  const message = document.createElement('div');
+function createNotification(type, message) {
+  let notification = document.querySelector('[data-qa="notification"]');
 
-  message.setAttribute('data-qa', 'notification');
-  message.classList = `${type}`;
-  message.textContent = promiseMsg;
+  if (!notification) {
+    notification = document.createElement('div');
+    notification.setAttribute('data-qa', 'notification');
+    document.body.appendChild(notification);
+  }
 
-  return message;
+  notification.className = type;
+  notification.textContent = message;
+
+  return notification;
 }
